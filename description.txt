@@ -1,0 +1,44 @@
+This solution is written in the Python programming language. The program is used via the command line, where for each functionality (init, put and get) the script "main.py" is executed with the appropriate arguments. The shell script "run_password_manager.sh" automatically demonstrates all functionalities required by the example in the laboratory exercise.
+
+The system is intended for proper use, i.e. error recovery is not implemented.
+
+SYSTEM OPERATION:
+
+To run the program in the Ubuntu Linux environment, it is first necessary to navigate to the directory where the program is located.
+Since the program requires the Python package tool "pip" and the library "pycryptodome", the following commands must first be executed:
+"sudo apt update"
+"sudo apt install python3-pip -y"
+After that, the shell script is executed:
+"bash run_password_manager.sh"
+Within the script, the required library is automatically installed:
+"python3 -m pip install pycryptodome"
+and then the test examples of the program are executed in order (init, put, get).
+
+If the examples are entered manually, the program must first be started with the argument "init" and an initial master password must be provided.
+
+When calling init mAsterPasswrd, three files are created:
+"database.db" - contains encrypted data in Base64 format
+"saltIV.bin" - a binary file that contains randomly generated salt and IV, used for key derivation and encryption/decryption
+"hmac.bin" - contains the HMAC hash of the database used for integrity verification
+
+Calling "init" deletes all previous data because a new salt, IV, and key are generated.
+
+Each subsequent call of the "put" and "get" commands uses the same "saltIV.bin" to reconstruct the encryption and HMAC keys from the master password. If any bit in the files "saltIV.bin", "hmac.bin", or "database.db" is changed, the program will output:
+"Master password incorrect or integrity check failed."
+
+Data in "database.db" is stored as Base64 encoded ciphertext for easier verification and testing. IV and salt are stored in binary form, and the HMAC is also stored as a binary record.
+
+PASSWORD PROTECTION AND SECURITY REQUIREMENTS:
+
+Confidentiality of passwords is ensured using the AES256 algorithm in CBC mode. The encryption key is derived using the PBKDF2 algorithm from the master password and salt. The salt is randomly generated on each "init" call, ensuring that identical passwords do not result in the same ciphertext.
+
+The database of pairs (address + password) is stored as a single encrypted string. Since the entire database is encrypted as a whole, an attacker cannot determine the number of addresses, password lengths, or the existence of identical passwords, thus satisfying the requirement for metadata protection.
+
+Database integrity is ensured using HMAC. The HMAC key is also derived from the same master password and salt. HMAC is used to verify that the ciphertext has not been modified (either manually or due to an incorrect password), thus ensuring data integrity.
+
+Resistance to brute-force attacks is ensured by using the PBKDF2 algorithm with 65536 iterations, making such attacks inefficient.
+
+With this approach, all basic security requirements are satisfied:
+Confidentiality (AES256 encryption)
+Integrity (HMAC)
+Resistance to brute-force attacks (PBKDF2 + salt)
